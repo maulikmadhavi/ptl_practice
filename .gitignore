@@ -2,4 +2,3 @@ unit5/lightning_logs/
 unit5/mnist/
 unit5/lightning.pt
 unit5/mnist/
-.gitignore

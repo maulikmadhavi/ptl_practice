@@ -1,2 +1,0 @@
-unit5/mnist/ filter=lfs diff=lfs merge=lfs -text
-unit5/mnist/**/* filter=lfs diff=lfs merge=lfs -text
