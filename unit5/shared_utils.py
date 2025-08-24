@@ -4,6 +4,7 @@ from torch.utils.data.dataset import random_split
 from torchvision import datasets, transforms
 from collections import Counter
 import random
+from torchmetrics import Accuracy
 
 torch.random.manual_seed(42)
 random.seed(42)
@@ -83,6 +84,25 @@ def compute_accuracy(model, dataloader, device=None):
         total_examples += len(compare)
 
     return correct / total_examples
+
+
+def compute_accuracy_torchmetrics(model, dataloader, device=None, num_classes=10):
+    if device is None:
+        device = torch.device("cpu")
+
+    model = model.eval()
+    accuracy = Accuracy(num_classes=num_classes, task="multiclass").to(device)
+
+    for features, labels in dataloader:
+        features, labels = features.to(device), labels.to(device)
+
+        with torch.no_grad():
+            logits = model(features)
+
+        predictions = torch.argmax(logits, dim=1)
+        accuracy(predictions, labels)
+
+    return accuracy.compute()
 
 
 if __name__ == "__main__":

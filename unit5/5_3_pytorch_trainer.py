@@ -1,7 +1,6 @@
 import torch
 import torch.nn.functional as F
-from shared_utils import get_dataset_loaders, PyTorchMLP, compute_accuracy
-from torchmetrics import Accuracy
+from shared_utils import get_dataset_loaders, PyTorchMLP, compute_accuracy_torchmetrics
 
 
 def compute_total_loss(model, dataloader, device=None):
@@ -48,8 +47,8 @@ def train(model, train_loader, val_loader, optimizer, device=None):
     # Validate the model
     val_loss = compute_total_loss(model, val_loader, device=device)
 
-    train_acc = compute_accuracy(model, train_loader, device=device)
-    val_acc = compute_accuracy(model, val_loader, device=device)
+    train_acc = compute_accuracy_torchmetrics(model, train_loader, device=device, num_classes=10)
+    val_acc = compute_accuracy_torchmetrics(model, val_loader, device=device, num_classes=10)
 
     return avg_train_loss, val_loss, train_acc, val_acc
 
@@ -57,7 +56,7 @@ def train(model, train_loader, val_loader, optimizer, device=None):
 if __name__ == "__main__":
     model = PyTorchMLP(num_features=28 * 28, num_classes=10)
     N_EPOCHS = 10
-    LR = 0.01
+    LR = 0.05
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = model.to(device)  # Move model to the correct device
     train_loader, val_loader, test_loader = get_dataset_loaders()
@@ -70,5 +69,5 @@ if __name__ == "__main__":
         print(f"Train accuracy: {train_acc:.4f}, Val accuracy: {val_acc:.4f}")
 
     print("Testing the model on the test set...")
-    test_acc = compute_accuracy(model, test_loader, device=device)
+    test_acc = compute_accuracy_torchmetrics(model, test_loader, device=device, num_classes=10)
     print(f"Test accuracy: {test_acc:.4f}")
