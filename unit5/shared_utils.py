@@ -1,3 +1,4 @@
+from lightning.pytorch.utilities.types import EVAL_DATALOADERS
 import torch
 from torch.utils.data import DataLoader
 from torch.utils.data.dataset import random_split
@@ -5,6 +6,7 @@ from torchvision import datasets, transforms
 from collections import Counter
 import random
 from torchmetrics import Accuracy
+from lightning import LightningDataModule
 
 torch.random.manual_seed(42)
 random.seed(42)
@@ -103,6 +105,36 @@ def compute_accuracy_torchmetrics(model, dataloader, device=None, num_classes=10
         accuracy(predictions, labels)
 
     return accuracy.compute()
+
+
+class MNISTDataModule(LightningDataModule):
+    def __init__(self, batch_size=64):
+        super().__init__()
+        self.batch_size = batch_size
+
+    def prepare_data(self):
+        datasets.MNIST(root="./mnist", train=True, download=True)
+        datasets.MNIST(root="./mnist", train=False, download=True)
+
+    def setup(self, stage=None):
+        self.mnist_test = datasets.MNIST(root="./mnist", train=False, transform=transforms.ToTensor())
+        self.mnist_predict = datasets.MNIST(root="./mnist", train=False, transform=transforms.ToTensor())
+        self.mnist_trainval = datasets.MNIST(root="./mnist", train=True, transform=transforms.ToTensor())
+        self.mnist_train, self.mnist_val = random_split(
+            self.mnist_trainval, [55000, 5000], generator=torch.Generator().manual_seed(42)
+        )
+
+    def train_dataloader(self):
+        return DataLoader(self.mnist_train, batch_size=self.batch_size, shuffle=True, num_workers=0)
+
+    def val_dataloader(self):
+        return DataLoader(self.mnist_val, batch_size=self.batch_size, shuffle=False, num_workers=0)
+
+    def test_dataloader(self):
+        return DataLoader(self.mnist_test, batch_size=self.batch_size, shuffle=False, num_workers=0)
+
+    def predict_dataloader(self):
+        return DataLoader(self.mnist_predict, batch_size=self.batch_size, shuffle=False, num_workers=0)
 
 
 if __name__ == "__main__":
